@@ -20,12 +20,14 @@ int main(int argc,char* argv[])
         read(p[0],read_text,10);
         printf("%d: received ping from pid %d\n",pid_child,pid_father);
         write(p[1],"pong",10);
+        close(p[1]);
         exit(0);
     }
     else{
         write(p[1],"ping",10);
         wait(0);
         read(p[0],read_text,10);
+        close(p[0]);
         printf("%d: received pong from pid %d\n",pid_father,pid);
         exit(0);
     }
