@@ -18,6 +18,7 @@ int main(int argc,char* argv[])
     else if(pid == 0){
         pid_child = getpid();
         read(p[0],read_text,10);
+        close(p[0]);
         printf("%d: received ping from pid %d\n",pid_child,pid_father);
         write(p[1],"pong",10);
         close(p[1]);
@@ -25,6 +26,7 @@ int main(int argc,char* argv[])
     }
     else{
         write(p[1],"ping",10);
+        close(p[1]);
         wait(0);
         read(p[0],read_text,10);
         close(p[0]);
