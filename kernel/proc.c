@@ -290,6 +290,30 @@ void reparent(struct proc *p) {
     }
   }
 }
+char *num2name(int num){
+  char *name;
+  switch(num){
+    case 0:
+      name = "unused";
+      break;
+    case 1:
+      name = "sleep";
+      break;
+    case 2:
+      name = "runble";
+      break;
+    case 3:
+      name = "run";
+      break;
+    case 4:
+      name = "zombie";
+      break;
+    default:
+      name = "not define";
+      break;
+  }
+  return name;
+}
 
 void printinfo(struct proc *p, struct proc *parent) {
   struct proc *pp;
@@ -303,7 +327,8 @@ void printinfo(struct proc *p, struct proc *parent) {
   char *parent_name = parent->name;
   enum procstate parent_state = parent->state;
 
-  exit_info("proc %d exit, parent pid %d, name %s, state %d\n",current_pid,parent_pid,parent_name,parent_state);
+  char *parent_s = num2name(parent_state);
+  exit_info("proc %d exit, parent pid %d, name %s, state %s\n",current_pid,parent_pid,parent_name,parent_s);
 
   release(&parent->lock);
   
@@ -319,7 +344,9 @@ void printinfo(struct proc *p, struct proc *parent) {
       child_pid = pp->pid;
       child_name = pp->name;
       child_state = pp->state;
-      exit_info("proc %d exit, child %d, pid %d, name %s, state %d\n",current_pid,n,child_pid,child_name,child_state);
+
+      char *child_s = num2name(child_state);
+      exit_info("proc %d exit, child %d, pid %d, name %s, state %s\n",current_pid,n,child_pid,child_name,child_s);
       n++;
       release(&pp->lock);
     }
@@ -394,7 +421,7 @@ void exit(int status) {
 
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
-int wait(uint64 addr) {
+int wait(uint64 addr, uint64 flag) {
   struct proc *np;
   int havekids, pid;
   struct proc *p = myproc();
@@ -437,7 +464,10 @@ int wait(uint64 addr) {
       release(&p->lock);
       return -1;
     }
-
+    if(flag == 1){
+      release(&p->lock);
+      return -1;
+    }
     // Wait for a child to exit.
     sleep(p, &p->lock);  // DOC: wait-sleep
   }

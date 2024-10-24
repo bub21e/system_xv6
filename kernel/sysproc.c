@@ -19,9 +19,10 @@ uint64 sys_getpid(void) { return myproc()->pid; }
 uint64 sys_fork(void) { return fork(); }
 
 uint64 sys_wait(void) {
-  uint64 p;
+  uint64 p,flag;
   if (argaddr(0, &p) < 0) return -1;
-  return wait(p);
+  if (argaddr(1, &flag) < 0) return -1;
+  return wait(p,flag);
 }
 
 uint64 sys_sbrk(void) {
@@ -79,5 +80,43 @@ uint64 sys_rename(void) {
   struct proc *p = myproc();
   memmove(p->name, name, len);
   p->name[len] = '\0';
+  return 0;
+}
+
+uint64 sys_yield(void) {
+  struct proc *mproc = myproc();
+  uint64 start_addr = (uint64)(&mproc->context);
+  uint64 end_addr = start_addr + sizeof(struct context);
+  printf("Save the context of the process to the memory region from address %p to %p\n", start_addr, end_addr);
+  printf("Current running process pid is %d and user pc is %p\n",mproc->pid , mproc->trapframe->epc);
+
+  struct proc *p;
+
+  intr_on();
+  int found = 0;
+  for(p = mproc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if(p->state == RUNNABLE) {
+      found = 1;
+      printf("Next runnable process pid is %d and user pc is %p\n", p->pid, p->trapframe->epc);
+    }
+    release(&p->lock); 
+    if(found == 1) {
+      yield();
+      return 0;
+    }      
+  }
+  for(p = proc; p < mproc; p++) {
+    acquire(&p->lock);
+    if(p->state == RUNNABLE) {
+      found = 1;
+      printf("Next runnable process pid is %d and user pc is %p\n", p->pid, p->trapframe->epc);
+    }
+    release(&p->lock); 
+    if(found == 1) {
+      yield();
+      return 0;
+    }      
+  }
   return 0;
 }
