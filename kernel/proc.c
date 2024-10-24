@@ -291,6 +291,42 @@ void reparent(struct proc *p) {
   }
 }
 
+void printinfo(struct proc *p, struct proc *parent) {
+  struct proc *pp;
+  
+  acquire(&p->lock);
+  acquire(&parent->lock);
+  //current
+  int current_pid = p->pid;
+  //parent
+  int parent_pid = parent->pid;
+  char *parent_name = parent->name;
+  enum procstate parent_state = parent->state;
+
+  exit_info("proc %d exit, parent pid %d, name %s, state %d\n",current_pid,parent_pid,parent_name,parent_state);
+
+  release(&parent->lock);
+  
+  //childs
+  int n = 0;
+  int child_pid;
+  char *child_name;
+  enum procstate child_state;
+  for(pp = proc; pp< &proc[NPROC]; pp++){
+    if(pp->parent == p) {
+      acquire(&pp->lock);
+      //get childs information
+      child_pid = pp->pid;
+      child_name = pp->name;
+      child_state = pp->state;
+      exit_info("proc %d exit, child %d, pid %d, name %s, state %d\n",current_pid,n,child_pid,child_name,child_state);
+      n++;
+      release(&pp->lock);
+    }
+  }
+  release(&p->lock);
+}
+
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait().
@@ -331,6 +367,8 @@ void exit(int status) {
   acquire(&p->lock);
   struct proc *original_parent = p->parent;
   release(&p->lock);
+
+  printinfo(p, original_parent);
 
   // we need the parent's lock in order to wake it up from wait().
   // the parent-then-child rule says we have to lock it first.

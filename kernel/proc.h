@@ -1,5 +1,5 @@
 // Saved registers for kernel context switches.
-struct context {
+struct context {//内核态上下文
   uint64 ra;
   uint64 sp;
 
@@ -41,7 +41,7 @@ extern struct cpu cpus[NCPU];
 // the trapframe includes callee-saved user registers like s0-s11 because the
 // return-to-user path via usertrapret() doesn't return through
 // the entire kernel call stack.
-struct trapframe {
+struct trapframe {//用户态上下文
   /*   0 */ uint64 kernel_satp;   // kernel page table
   /*   8 */ uint64 kernel_sp;     // top of process's kernel stack
   /*  16 */ uint64 kernel_trap;   // usertrap()
