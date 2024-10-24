@@ -338,6 +338,7 @@ void printinfo(struct proc *p, struct proc *parent) {
   char *child_name;
   enum procstate child_state;
   for(pp = proc; pp< &proc[NPROC]; pp++){
+    acquire(&pp->lock);
     if(pp->parent == p) {
       acquire(&pp->lock);
       //get childs information
@@ -348,8 +349,8 @@ void printinfo(struct proc *p, struct proc *parent) {
       char *child_s = num2name(child_state);
       exit_info("proc %d exit, child %d, pid %d, name %s, state %s\n",current_pid,n,child_pid,child_name,child_s);
       n++;
-      release(&pp->lock);
     }
+    release(&pp->lock);
   }
   release(&p->lock);
 }
