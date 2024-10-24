@@ -324,7 +324,8 @@ void printinfo(struct proc *p, struct proc *parent) {
   int current_pid = p->pid;
   //parent
   int parent_pid = parent->pid;
-  char *parent_name = parent->name;
+  char parent_name[16];
+  safestrcpy(parent_name,parent->name,sizeof(parent->name));
   enum procstate parent_state = parent->state;
 
   char *parent_s = num2name(parent_state);
@@ -335,22 +336,19 @@ void printinfo(struct proc *p, struct proc *parent) {
   //childs
   int n = 0;
   int child_pid;
-  char *child_name;
   enum procstate child_state;
   for(pp = proc; pp< &proc[NPROC]; pp++){
-    acquire(&pp->lock);
     if(pp->parent == p) {
-      acquire(&pp->lock);
       //get childs information
       child_pid = pp->pid;
-      child_name = pp->name;
+      char child_name[16];
+      safestrcpy(child_name,pp->name,sizeof(pp->name));
       child_state = pp->state;
 
       char *child_s = num2name(child_state);
       exit_info("proc %d exit, child %d, pid %d, name %s, state %s\n",current_pid,n,child_pid,child_name,child_s);
       n++;
     }
-    release(&pp->lock);
   }
   release(&p->lock);
 }
